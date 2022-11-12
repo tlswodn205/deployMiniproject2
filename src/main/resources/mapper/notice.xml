@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.metacoding.miniproject.domain.notice.NoticeDao">
+  <select id="findAll" resultType="site.metacoding.miniproject.domain.notice.Notice">
+    SELECT *
+    FROM Notice
+  </select>
+
+  <select id="findById" resultType="site.metacoding.miniproject.domain.notice.Notice">
+    SELECT *
+    FROM Notice
+    WHERE notice_id = #{noticeId}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO Notice(company_id, notice_title, is_closed, salary, degree, career, notice_content, created_At)
+    VALUES(#{companyId}, #{noticeTitle}, false, #{salary}, #{degree}, #{career}, #{noticeContent}, now())
+  </insert>
+
+  <delete id="deleteById">
+    DELETE FROM Notice
+    WHERE notice_id = #{noticeId}
+  </delete>
+
+  <update id="update">
+    Update Notice
+    is_closed = #{isClosed}
+    WHERE notice_id = #{noticeId}
+  </update>
+
+  <select id="findByCompanyId" resultType="site.metacoding.miniproject.dto.response.notice.NoticeRespDto">
+    SELECT notice_id, notice_title, salary, degree, is_closed, created_At
+    FROM Notice
+    WHERE company_id = #{companyId}
+    ORDER BY is_closed ASC
+  </select>
+
+  <select id="findRecentNoticeId" resultType="Integer">
+    SELECT notice_id
+    FROM Notice
+    WHERE company_id = #{companyId}
+    ORDER BY created_At desc
+    FETCH NEXT 1 ROWS ONLY
+  </select>
+
+  <update id="closeNotice">
+    Update Notice
+    SET is_closed = #{isClosed}
+    WHERE notice_id = #{noticeId}
+  </update>
+
+  <select id="findNoticeApply" resultType="site.metacoding.miniproject.dto.response.notice.NoticeApplyRespDto">
+		SELECT cn.notice_id, cn.notice_title, cn.resume_title, c.address, c.company_name, c.company_id
+		FROM (
+    SELECT n.notice_Id, n.notice_title, n.company_Id ,ML.resume_title
+		FROM (
+    SELECT s.*, pp.resume_title, pp.person_id
+		FROM(
+    SELECT r.person_id, r.resume_title, r.resume_id
+		FROM person p INNER JOIN resume r 
+		ON p.person_id = r.person_id WHERE user_id=#{userId}) pp 
+    INNER JOIN  submit_resume s
+		ON s.resume_Id = pp.resume_Id) ML 
+    INNER JOIN notice n
+		ON ML.notice_Id = n.notice_Id WHERE n.is_closed= false) cn 
+    INNER JOIN company c
+		ON cn.company_id = c.company_id 
+	</select>
+
+
+  <select id="noticeInsertResult" resultType="site.metacoding.miniproject.dto.response.notice.NoticeInsertRespDto">
+    select *
+    from notice
+    where company_id = #{companyId}
+    order by notice_id desc
+		FETCH NEXT 1 ROWS ONLY
+  </select>
+
+
+  <select id="closeNoticeResult" resultType="site.metacoding.miniproject.dto.response.notice.CloseNoticeRespDto">
+      select *
+      from notice
+      where notice_id = #{noticeId}
+    </select>
+
+</mapper>

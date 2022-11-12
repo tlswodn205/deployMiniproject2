@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper
+	namespace="site.metacoding.miniproject.domain.company.CompanyDao">
+
+	<select id="findAll"
+		resultType="site.metacoding.miniproject.domain.company.Company">
+		SELECT *
+		FROM company
+	</select>
+
+	<select id="findById"
+		resultType="site.metacoding.miniproject.domain.company.Company">
+		SELECT *
+		FROM company
+		WHERE company_Id = #{companyId}
+	</select>
+
+
+	<insert id="companyInsertRespDto">
+		INSERT INTO company(company_id, photo, introduction, history, company_goal)
+		VALUES(#{companyId}, #{photo},  #{introduction}, #{history},  #{companyGoal})
+	</insert>
+
+
+	<insert id="insert">
+		INSERT INTO company(user_Id, company_Name,
+		company_Email, company_Phone,tech, address, ceo_Name,
+		created_At)
+		VALUES(#{userId}, #{companyName}, #{companyEmail},
+		#{companyPhone},
+		#{tech},  #{address}, #{ceoName},
+		now())
+	</insert>
+
+	<delete id="deleteById">
+		DELETE FROM company
+		WHERE company_Id = #{companyId}
+	</delete>
+
+	<update id="updateById">
+		Update company
+		SET company_name = #{companyName},
+		company_email = #{companyEmail},
+		company_phone = #{companyPhone}, tech
+		= #{tech}, address = #{address},
+		ceoName = #{ceoName}
+		WHERE company_id =
+		#{companyId}
+	</update>
+
+	<select id="findToRecommned"
+		resultType="site.metacoding.miniproject.dto.response.company.CompanyRecommendRespDto">
+		SELECT cn.notice_id, cn.notice_title, cn.resume_title, c.address, c.company_name, c.company_id
+		FROM (
+    SELECT n.notice_Id, n.notice_title, n.company_Id ,ML.resume_title
+		FROM (
+    SELECT s.*, pp.resume_title, pp.person_id
+		FROM(
+    SELECT r.person_id, r.resume_title, r.resume_id
+		FROM person p INNER JOIN resume r 
+		ON p.person_id = r.person_id WHERE user_id=#{userId}) pp 
+    INNER JOIN  submit_resume s
+		ON s.resume_Id = pp.resume_Id) ML 
+    INNER JOIN notice n
+		ON ML.notice_Id = n.notice_Id WHERE n.is_closed= false) cn 
+    INNER JOIN company c
+		ON cn.company_id = c.company_id 
+	</select>
+
+	<select id="findToNoticeId"
+		resultType="site.metacoding.miniproject.dto.response.company.CompanyRecommendRespDto">
+		SELECT COUNT(recommend.subject_id) as recommend_count , FIRST.*
+		FROM (SELECT n.*, c.user_id user_id, c.company_name company_name, c.address address
+		FROM (select * FROM notice where notice_id = #{noticeId}) n INNER JOIN company c
+		ON n.company_id = c.company_id
+		WHERE is_closed =false GROUP BY (user_id) ) FIRST LEFT OUTER JOIN recommend
+		ON recommend.subject_id = FIRST.user_id
+		ORDER BY subject_id desc
+	</select>
+
+	<select id="findByUserId"
+		resultType="site.metacoding.miniproject.domain.company.Company">
+		SELECT *
+		FROM company
+		WHERE user_Id = #{userId}
+	</select>
+
+	<update id="updateCompanyIntroduction">
+	Update company 
+	set photo = #{photo}, 
+	introduction = #{introduction},
+	history = #{history},
+	company_goal = #{companyGoal}
+	where company_id = #{companyId}
+  	</update>
+
+	<select id="findToCompanyMyPage"
+		resultType="site.metacoding.miniproject.dto.response.company.CompanyMyPageRespDto">
+		SELECT u.user_id, c.company_id, u.username, u.password, c.company_name,
+		c.ceo_name,
+		c.address, c.company_phone, substr(company_email,1,
+		instr(company_email,'@')-1) AS company_email, c.tech
+		FROM users u LEFT
+		OUTER JOIN company c
+		ON u.user_id = c.user_id
+		WHERE c.user_id =
+		#{userId}
+	</select>
+
+
+	<update id="updateToCompany">
+		UPDATE company SET ceo_name = #{ceoName}, address = #{address}, company_phone=#{companyPhone}, company_email =#{companyEmail}, tech=#{tech}
+		WHERE user_id = #{userId}
+	</update>
+
+	<select id="CompanyMyPageUpdateResult" resultType="site.metacoding.miniproject.dto.response.company.CompanyMyPageUpdateRespDto">
+		select *
+		from company
+		WHERE user_id = #{userId}
+	</select>
+
+
+	<select id="companyInfoUpdateResult" resultType="site.metacoding.miniproject.dto.response.company.CompanyInsertRespDto">
+		select *
+		from company
+		WHERE company_Id = #{companyId}
+    </select>
+
+	<select id="CompanyJoinResult" resultType="site.metacoding.miniproject.dto.response.company.CompanyJoinRespDto">
+		select *
+		from company c inner join users u
+		on c.user_Id = u.user_id
+		WHERE c.user_id = #{userId}
+	</select>
+
+</mapper>

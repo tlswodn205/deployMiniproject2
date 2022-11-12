@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.metacoding.miniproject.domain.recommend.RecommendDao">
+
+  <select id="findAll" resultType="site.metacoding.miniproject.domain.recommend.Recommend">
+    SELECT *
+    FROM recommend
+  </select>
+
+  <select id="findById" resultType="site.metacoding.miniproject.domain.recommend.Recommend">
+    SELECT *
+    FROM recommend
+    WHERE recommend_Id = #{recommendId}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO recommend(user_id, subject_id, created_At)
+    VALUES(#{userId}, #{subjectId}, now())
+  </insert>
+
+  <delete id="delete">
+    DELETE FROM recommend
+    WHERE recommend_Id = #{recommendId}
+  </delete>
+
+  <update id="update"></update>
+
+  <select id="findAboutsubject" resultType="site.metacoding.miniproject.dto.response.recommend.RecommendDetailRespDto">
+    SELECT count(*) recommendCount ,( SELECT recommend_id
+    FROM recommend
+    WHERE subject_id = #{subjectId} and user_id = #{userId}) recommendId
+    FROM recommend
+    WHERE subject_id = #{subjectId}
+  </select>
+
+</mapper>

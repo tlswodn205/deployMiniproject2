@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.metacoding.miniproject.domain.person_skill.PersonSkillDao">
+
+  <select id="findAll" resultType="site.metacoding.miniproject.domain.person_skill.PersonSkill">
+    SELECT *
+    FROM Person_Skill
+  </select>
+
+  <select id="personSkillInfo" resultType="site.metacoding.miniproject.dto.response.person.PersonInfoRespDto">
+   SELECT *
+    FROM Person_Skill
+    WHERE person_id = #{personId}
+  </select>
+
+  <select id="findById" resultType="site.metacoding.miniproject.domain.person_skill.PersonSkill">
+    SELECT *
+    FROM Person_Skill
+    WHERE person_Skill_Id = #{personSkillId}
+  </select>
+
+  <select id="findByPersonId" resultType="String">
+    SELECT skill
+    FROM Person_Skill
+    WHERE person_Id = #{personId}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO person_Skill(person_id, skill, created_At)
+    VALUES(#{personId}, #{skill}, now())
+  </insert>
+
+  <delete id="deleteById">
+    DELETE FROM Person_Skill
+    WHERE person_Skill_Id = #{personSkillId}
+  </delete>
+
+  <update id="update">
+    Update Person_Skill
+    SET skill = #{skill}
+    WHERE person_Skill_Id = #{personSkillId}
+  </update>
+
+  <select id="findBySkill" resultType="Integer">
+    SELECT person_id
+    FROM Person_Skill
+    WHERE skill = #{skill}
+  </select>
+
+  <select id="findBySkillAndPersonId" resultType="Integer">
+    SELECT person_id
+    FROM Person_Skill
+    WHERE skill = #{skill} and person_id = #{personId}
+  </select>
+
+</mapper>

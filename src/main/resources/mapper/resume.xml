@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="site.metacoding.miniproject.domain.resume.ResumeDao">
+  <select id="findAll" resultType="site.metacoding.miniproject.domain.resume.Resume">
+    SELECT *
+    FROM resume
+  </select>
+
+  <select id="findById" resultType="site.metacoding.miniproject.domain.resume.Resume">
+    SELECT *
+    FROM resume
+    WHERE resume_id = #{resumeId}
+  </select>
+
+  <insert id="insert">
+    INSERT INTO resume(person_id, resume_title, photo, introduction, my_cloud, created_At )
+    VALUES( #{personId}, #{resumeTitle}, #{photo}, #{introduction}, #{myCloud}, now())
+  </insert>
+
+  <insert id="save" useGeneratedKeys="true" keyProperty="resumeId">
+    INSERT INTO resume(person_id, resume_title, photo, introduction, my_cloud, created_At )
+    VALUES( #{personId}, #{resumeTitle}, #{photo}, #{introduction}, #{myCloud}, now())
+  </insert>
+
+  <delete id="deleteById">
+    DELETE FROM resume
+    WHERE resume_id = #{resumeId}
+  </delete>
+
+  <update id="update">
+    Update resume
+    SET photo = #{photo} , introduction = #{introduction} ,my_cloud =#{myCloud}
+    WHERE resume_id = #{resumeId}
+  </update>
+
+  <select id="findByPersonId" resultType="site.metacoding.miniproject.domain.resume.Resume">
+    SELECT *
+    FROM resume
+    WHERE person_id = #{personId}
+  </select>
+
+  <select id="resumeWriteResult" resultType="site.metacoding.miniproject.dto.response.resume.ResumeWriteRespDto">
+    select *
+    from resume
+    where person_id = #{personId}
+    order by resume_id desc
+		FETCH NEXT 1 ROWS ONLY
+  </select>
+
+  <select id="resumeDeleteResult" resultType="site.metacoding.miniproject.dto.response.resume.ResumeDeleteRespDto">
+    select *
+    from resume
+    where resume_id = #{resumeId}
+  </select>
+</mapper>
