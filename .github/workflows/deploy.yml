@@ -1,4 +1,4 @@
-name: miniproject2
+name: deployMiniproject2
 on:
     push:
         branches:
