@@ -12,6 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.springframework.context.annotation.Profile;
+
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
@@ -22,12 +24,13 @@ import site.metacoding.miniproject.utill.SecretKey;
 import site.metacoding.miniproject.utill.JWTToken.CookieForToken;
 import site.metacoding.miniproject.utill.JWTToken.TokenToSinedDto;
 
-@Slf4j
 public class JwtAuthorizationFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
+
+        System.out.println("디버그 5 : ");
 
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
@@ -37,9 +40,10 @@ public class JwtAuthorizationFilter implements Filter {
             return;
         }
 
-        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(SecretKey.SECRETKEY.key())).build().verify(tokenForCookie);
-        
-        //map 형식으로 저장되어있는 토큰값을 map형식으로 가져온다.
+        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC512(SecretKey.SECRETKEY.key())).build()
+                .verify(tokenForCookie);
+
+        // map 형식으로 저장되어있는 토큰값을 map형식으로 가져온다.
         Map<String, Object> getSigned = decodedJWT.getClaim("sessionUserDto").asMap();
 
         TokenToSinedDto tokenToSinedDto = new TokenToSinedDto();

@@ -41,7 +41,9 @@ import site.metacoding.miniproject.dto.request.notice.NoticeInsertReqDto;
 import site.metacoding.miniproject.dto.request.user.LoginReqDto;
 import site.metacoding.miniproject.utill.JWTToken.CreateJWTToken;
 
-@ActiveProfiles("JTest") // 테스트 어플리케이션 실행
+@Sql(scripts = "classpath:dummy.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+@ActiveProfiles("jtest") // 테스트 어플리케이션 실행
 @Transactional
 @AutoConfigureMockMvc // MockMvc Ioc 컨테이너에 등록 실제가 아닌 가짜
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK) // MOCK은 가짜 환경임
@@ -56,15 +58,7 @@ public class CompanyApiControllerTest {
     @Autowired
     private ObjectMapper om;
 
-    @Autowired
-    private CompanyDao companyDao;
-
-    @Autowired
-    private UserDao userDao;
-
     private MockHttpSession session;
-
-    private MockCookie cookie;
 
     // @BeforeEach
     // public void sessionInit() {
@@ -74,35 +68,21 @@ public class CompanyApiControllerTest {
     // session.setAttribute("principal", new SessionUserDto(user));
     // }
 
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
-
     public void sessionToInitCompany() {
-
         session = new MockHttpSession();
         SessionUserDto sessionUserDto = new SessionUserDto(7, "ire", "company");
-
         session.setAttribute("principal", sessionUserDto);
-
-        String JwtToken = CreateJWTToken.createToken(sessionUserDto); // Authorization
-        cookie = new MockCookie("Authorization", JwtToken);
 
     }
 
     public void sessionToInitPerson() {
-
         session = new MockHttpSession();
         SessionUserDto sessionUserDto = new SessionUserDto(1, "ppc", "person");
-
         session.setAttribute("principal", sessionUserDto);
-
-        String JwtToken = CreateJWTToken.createToken(sessionUserDto); // Authorization
-        cookie = new MockCookie("Authorization", JwtToken);
-
     }
 
     // 기업회원가입
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void joinCompany_test() throws Exception {
         // given
@@ -128,8 +108,6 @@ public class CompanyApiControllerTest {
     }
 
     // 기업회원가입 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void companyJoinForm_test() throws Exception {
         // given
@@ -146,8 +124,6 @@ public class CompanyApiControllerTest {
     }
 
     // 기업추천 리스트 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void recommendListFrom_test() throws Exception {
 
@@ -155,7 +131,7 @@ public class CompanyApiControllerTest {
         sessionToInitPerson();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/recommendListFrom").session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/recommendListFrom").session(session)
                         .accept(APPLICATION_JSON));
 
         // then
@@ -166,15 +142,13 @@ public class CompanyApiControllerTest {
     }
 
     // 기업 마이페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void companyMyPageForm_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/companyMypageForm").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/companyMypageForm").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -184,8 +158,6 @@ public class CompanyApiControllerTest {
     }
 
     // 기업 마이페이지 수정하기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void update_test() throws Exception {
         // given
@@ -198,28 +170,26 @@ public class CompanyApiControllerTest {
 
         // when
         ResultActions resultActions = mvc
-                .perform(put("/s/companyMypageUpdate").session(session).cookie(cookie).content(body)
+                .perform(put("/s/companyMypageUpdate").session(session).content(body)
                         // post안에 , 해서 넣을수있다 -> 쿼리스트림
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON) // 둘 중 하나라도 안적으면 안나옴 -> json타입인줄 몰라서
                         .session(session)); // 가짜세션!!
 
         // then/ charset=utf-8안넣으면바로한글이깨진다
         MvcResult mvcResult = resultActions.andReturn();
-        System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());
+        System.out.println("디버그 1 : " + mvcResult.getResponse().getContentAsString());
         resultActions.andExpect(jsonPath("$.code").value(1L));
         resultActions.andExpect(jsonPath("$.data.ceoName").value("나사장"));
     }
 
     // 기업소개등록 페이지 불러오기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void companyInsertForm_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/companyInsertWriteForm").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/companyInsertWriteForm").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -229,15 +199,13 @@ public class CompanyApiControllerTest {
     }
 
     // 기업추천리스트보기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void skillCompanyMatching_test() throws Exception {
         // given
         sessionToInitPerson();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/matchingListFrom").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/matchingListFrom").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -246,8 +214,6 @@ public class CompanyApiControllerTest {
 
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void skillCompanyMatchingList_test() throws Exception {
 
@@ -269,15 +235,14 @@ public class CompanyApiControllerTest {
     }
 
     // 구독 관리 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void subscribeManage_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/subscribeManageForm").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/subscribeManageForm").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -287,8 +252,7 @@ public class CompanyApiControllerTest {
     }
 
     // 구독 취소
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void deleteSubscribe_test() throws Exception {
         // given
@@ -298,7 +262,7 @@ public class CompanyApiControllerTest {
         ResultActions resultActions = mvc
                 .perform(delete("/s/deleteSubscribe/" + subscribeId)
                         .accept(APPLICATION_JSON)
-                        .session(session).cookie(cookie));
+                        .session(session));
 
         // then/ charset=utf-8안넣으면바로한글이깨진다
 
@@ -308,8 +272,7 @@ public class CompanyApiControllerTest {
     }
 
     // 기업 상세보기 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void companyDetail_test() throws Exception {
         // given
@@ -318,7 +281,7 @@ public class CompanyApiControllerTest {
 
         // when
         ResultActions resultActions = mvc
-                .perform(get("/companyDetailForm/" + companyId).session(session).cookie(cookie)
+                .perform(get("/companyDetailForm/" + companyId).session(session)
                         .accept(APPLICATION_JSON));
 
         // then
@@ -329,8 +292,7 @@ public class CompanyApiControllerTest {
     }
 
     // 기업 구독
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void companySubscribe_test() throws Exception {
 
@@ -339,7 +301,7 @@ public class CompanyApiControllerTest {
         sessionToInitPerson();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/s/subscribe/" + subjectId).session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/s/subscribe/" + subjectId).session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
         // then
@@ -349,8 +311,7 @@ public class CompanyApiControllerTest {
     }
 
     // 기업 추천
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void companyRecommend_test() throws Exception {
 
@@ -359,7 +320,7 @@ public class CompanyApiControllerTest {
         sessionToInitPerson();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/s/recommend/" + subjectId).session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/s/recommend/" + subjectId).session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
         // then
@@ -369,15 +330,14 @@ public class CompanyApiControllerTest {
     }
 
     // 등록 공고 보기 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void noticeLoad_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/noticeLoadForm").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/noticeLoadForm").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -387,15 +347,14 @@ public class CompanyApiControllerTest {
     }
 
     // 공고 등록하기 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void noticeWrite_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/noticeWriteForm").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/noticeWriteForm").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();
@@ -405,8 +364,7 @@ public class CompanyApiControllerTest {
     }
 
     // 공고 등록
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void noticeInsert_test() throws Exception {
 
@@ -427,7 +385,7 @@ public class CompanyApiControllerTest {
         // when
         ResultActions resultActions = mvc
                 .perform(
-                        MockMvcRequestBuilders.post("/s/noticeInsert").session(session).cookie(cookie).content(body)
+                        MockMvcRequestBuilders.post("/s/noticeInsert").session(session).content(body)
                                 .contentType(APPLICATION_JSON)
                                 .accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
@@ -439,8 +397,7 @@ public class CompanyApiControllerTest {
     }
 
     // 공고 상세보기 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void noticeDetail_test() throws Exception {
         // given
@@ -458,15 +415,14 @@ public class CompanyApiControllerTest {
     }
 
     // 공고 상세보기 페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+
     @Test
     public void myCompanyDetail_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(get("/s/companyDetail").session(session).cookie(cookie).accept(APPLICATION_JSON));
+                .perform(get("/s/companyDetail").session(session).accept(APPLICATION_JSON));
 
         // then
         MvcResult mvcResult = resultActions.andReturn();

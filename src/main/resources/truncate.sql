@@ -1,11 +1,11 @@
 
-DROP TABLE users;
-DROP TABLE submit_resume;
-DROP TABLE recommend;
-DROP TABLE person;
-DROP TABLE person_skill;
-DROP TABLE resume;
-DROP TABLE company;
-DROP TABLE notice;
-DROP TABLE need_skill;
-DROP TABLE subscribe;
+truncate TABLE users;
+truncate TABLE submit_resume;
+truncate TABLE recommend;
+truncate TABLE person;
+truncate TABLE person_skill;
+truncate TABLE resume;
+truncate TABLE company;
+truncate TABLE notice;
+truncate TABLE need_skill;
+truncate TABLE subscribe;

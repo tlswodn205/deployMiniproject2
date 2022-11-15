@@ -3,13 +3,11 @@ package site.metacoding.miniproject;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.mock.web.MockCookie;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
@@ -24,16 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import site.metacoding.miniproject.domain.user.UserDao;
 import site.metacoding.miniproject.dto.SessionUserDto;
 import site.metacoding.miniproject.dto.request.resume.ResumeWriteReqDto;
 import site.metacoding.miniproject.dto.request.resume.SubmitResumeReqDto;
-import site.metacoding.miniproject.dto.response.person.InterestPersonRespDto;
-import site.metacoding.miniproject.utill.JWTToken.CreateJWTToken;
 import site.metacoding.miniproject.dto.request.person.PersonJoinReqDto;
 import site.metacoding.miniproject.dto.request.person.PersonMyPageUpdateReqDto;
 
-@ActiveProfiles("JTest") // 테스트 어플리케이션 실행
+@Sql(scripts = "classpath:dummy.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+@ActiveProfiles("jtest") // 테스트 어플리케이션 실행
 @Transactional
 @AutoConfigureMockMvc // MockMvc Ioc 컨테이너에 등록 실제가 아닌 가짜
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK) // MOCK은 가짜 환경임
@@ -47,12 +44,8 @@ public class PersonApiControllerTest {
     @Autowired
     private ObjectMapper om;
 
-    @Autowired
-    private UserDao userDao;
-
     private MockHttpSession session;
 
-    private MockCookie cookie;
     // @BeforeEach
     // public void sessionInit() {
     // session = new MockHttpSession();// 직접 new를 했다 MockHttpSession해야 Mock가 된다
@@ -68,10 +61,6 @@ public class PersonApiControllerTest {
         SessionUserDto sessionUserDto = new SessionUserDto(7, "ire", "company");
 
         session.setAttribute("principal", sessionUserDto);
-
-        String JwtToken = CreateJWTToken.createToken(sessionUserDto); // Authorization
-        cookie = new MockCookie("Authorization", JwtToken);
-
     }
 
     public void sessionToInitPerson() {
@@ -80,15 +69,9 @@ public class PersonApiControllerTest {
         SessionUserDto sessionUserDto = new SessionUserDto(1, "ssar", "person");
 
         session.setAttribute("principal", sessionUserDto);
-
-        String JwtToken = CreateJWTToken.createToken(sessionUserDto); // Authorization
-        cookie = new MockCookie("Authorization", JwtToken);
-
     }
 
     // 개인회원가입
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void joinPerson_test() throws Exception {
         // given
@@ -116,8 +99,6 @@ public class PersonApiControllerTest {
     }
 
     // 개인 회원가입 페이지 불러오기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void joinPersonForm_test() throws Exception {
         // given
@@ -132,8 +113,6 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void resumeWrite_test() throws Exception {
         // given
@@ -150,8 +129,7 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc
                 .perform(
-                        MockMvcRequestBuilders.post("/s/resumeSave/").session(session)
-                                .cookie(cookie).content(body)
+                        MockMvcRequestBuilders.post("/s/resumeSave/").session(session).content(body)
                                 .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
         // then
@@ -160,8 +138,6 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void personRecommend_test() throws Exception {
         // given
@@ -170,7 +146,7 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc
                 .perform(MockMvcRequestBuilders.get("/s/personRecommend/" + subjectId)
-                        .session(session).cookie(cookie)
+                        .session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
 
         // then
@@ -179,8 +155,6 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void personDetailForm_test() throws Exception {
         // given
@@ -188,7 +162,7 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc
 
-                .perform(MockMvcRequestBuilders.get("/s/personDetailForm/" + 2).session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/s/personDetailForm/" + 2).session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
         // then
@@ -197,8 +171,6 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void personRecommendList_test() throws Exception {
         // given
@@ -213,15 +185,13 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void PersonRecommendListFrom_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/personRecommendListForm").session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/personRecommendListForm").session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
         // then
@@ -231,8 +201,6 @@ public class PersonApiControllerTest {
     }
 
     // 관심구직자리스트
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void interestPersonSkillList_test() throws Exception {
         // given
@@ -253,8 +221,6 @@ public class PersonApiControllerTest {
     }
 
     // 구직자 마이페이지
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void PersonMypageForm_Test() throws Exception {
         // given
@@ -262,15 +228,13 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc
                 .perform(MockMvcRequestBuilders.get("/s/personMypageForm")
-                        .session(session).cookie(cookie)
+                        .session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         MvcResult mvcResult = resultActions.andReturn();
         System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void updateToPerson_test() throws Exception {
         // given
@@ -289,7 +253,7 @@ public class PersonApiControllerTest {
         String body = om.writeValueAsString(personMyPageUpdateReqDto);
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.put("/s/personMypageUpdate").session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.put("/s/personMypageUpdate").session(session)
                         .content(body)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         System.out.println("디버그 : " + resultActions.andReturn().getResponse().getContentAsString());
@@ -300,8 +264,6 @@ public class PersonApiControllerTest {
     }
 
     // 이력서삭제하기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void resumeDelete_test() throws Exception {
         // given
@@ -314,7 +276,7 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc.perform(
                 MockMvcRequestBuilders
-                        .delete("/s/deleteResume/1").session(session).cookie(cookie)
+                        .delete("/s/deleteResume/1").session(session)
                         // .content(body)
                         .contentType(APPLICATION_JSON)
                         .accept(APPLICATION_JSON));
@@ -324,15 +286,13 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void personResumeManage_Test() throws Exception {
         // given
         sessionToInitPerson();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/s/resumeManageForm").session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/s/resumeManageForm").session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         MvcResult mvcResult = resultActions.andReturn();
         System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());
@@ -340,8 +300,6 @@ public class PersonApiControllerTest {
     }
 
     // 공고별구직자리스트
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void findNoticePerApplier_Test() throws Exception {
         // given
@@ -355,15 +313,13 @@ public class PersonApiControllerTest {
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.code").value(1));
     }
 
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void closeNotice_test() throws Exception {
         // given
         sessionToInitCompany();
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.get("/s/noticeClose/" + 1).session(session).cookie(cookie)
+                .perform(MockMvcRequestBuilders.get("/s/noticeClose/" + 1).session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         MvcResult mvcResult = resultActions.andReturn();
         System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());
@@ -371,8 +327,6 @@ public class PersonApiControllerTest {
     }
 
     // 지원공고목록
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void personApply_Test() throws Exception {
         // given
@@ -380,7 +334,7 @@ public class PersonApiControllerTest {
         // when
         ResultActions resultActions = mvc
                 .perform(MockMvcRequestBuilders.get("/s/personApplyForm")
-                        .session(session).cookie(cookie)
+                        .session(session)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         MvcResult mvcResult = resultActions.andReturn();
         System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());
@@ -388,8 +342,6 @@ public class PersonApiControllerTest {
     }
 
     // 이력서제출하기
-    @Sql(scripts = "classpath:create.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-    @Sql(scripts = "classpath:truncate.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
     @Test
     public void submitResume_test() throws Exception {
         // given
@@ -403,7 +355,7 @@ public class PersonApiControllerTest {
 
         // when
         ResultActions resultActions = mvc
-                .perform(MockMvcRequestBuilders.post("/s/submitResume/").session(session).cookie(cookie).content(body)
+                .perform(MockMvcRequestBuilders.post("/s/submitResume/").session(session).content(body)
                         .contentType(APPLICATION_JSON).accept(APPLICATION_JSON));
         MvcResult mvcResult = resultActions.andReturn();
         System.out.println("디버그 : " + mvcResult.getResponse().getContentAsString());

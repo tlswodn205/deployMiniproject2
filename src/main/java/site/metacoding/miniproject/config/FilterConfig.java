@@ -3,14 +3,13 @@ package site.metacoding.miniproject.config;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import site.metacoding.miniproject.config.authfilter.JwtAuthenticationFilter;
 import site.metacoding.miniproject.config.authfilter.JwtAuthorizationFilter;
 
-
 @Configuration
 public class FilterConfig {
-
 
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegister() {
@@ -20,7 +19,8 @@ public class FilterConfig {
         bean.setOrder(1);
         return bean;
     }
-    
+
+    @Profile("prod")
     @Bean
     public FilterRegistrationBean<JwtAuthorizationFilter> jwtAuthorizationFilterRegister() {
         FilterRegistrationBean<JwtAuthorizationFilter> bean = new FilterRegistrationBean<>(

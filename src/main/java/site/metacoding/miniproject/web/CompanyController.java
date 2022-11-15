@@ -101,7 +101,10 @@ public class CompanyController {
   @PutMapping("/s/companyMypageUpdate")
   public CMRespDto<?> updateToCompany(
       @RequestBody CompanyMyPageUpdateReqDto companyMyPageUpdateReqDto) {
+    System.out.println("디버그 2: ");
     SessionUserDto userPS = (SessionUserDto) session.getAttribute("principal");
+    System.out.println("디버그 3: " + userPS.getUsername());
+
     companyMyPageUpdateReqDto.setUserId(userPS.getUserId());
     CompanyMyPageUpdateRespDto companyMyPageUpdateRespDto = companyService.기업회원정보수정(
         companyMyPageUpdateReqDto);
